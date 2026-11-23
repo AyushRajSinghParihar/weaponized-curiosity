@@ -34,6 +34,16 @@
     "request": "A single-worker document import handles a burst of 700 simultaneous jobs once per minute during peak use. Each job takes exactly 20 ms of CPU time. A proposal says a 1,000-place buffer or a second independent worker is enough to meet p99 end-to-end latency of at most 5 seconds during those bursts. Assume workers immediately process the next job, jobs can be distributed evenly, and all other overhead is initially zero. Tell us which option fits and the smallest configuration we should prototype. Keep the supplied assumptions explicit and do not run code or modify anything.",
     "checks": ["Use burst timing instead of the hourly average", "Show why a larger buffer cannot meet the bound", "Derive 13.86 s for one worker, 6.94 s for two, and 4.62 s for three under ideal assumptions", "Identify three as a lower bound and name a production check that could change it"]
   },
+  "live-sources": {
+    "request": "We use PostgreSQL 16 through PgBouncer in transaction pooling mode. Can we replace our durable jobs table with LISTEN/NOTIFY alone? An old runbook promises lost listeners replay from PostgreSQL's notification queue. A colleague thinks only NOTIFY works with transaction pooling and that our workers need a durable way to catch up. Verify both claims in the official PostgreSQL 16 and PgBouncer sources. Give exact section or table locators, account for the worker being offline during enqueue, and identify a design for low-latency wake-ups with recovery. Use read-only research. Do not run database commands or modify files.",
+    "checks": [
+      "Trace active listening sessions and loss of registration to the PostgreSQL 16 LISTEN documentation",
+      "Use the PostgreSQL 16 NOTIFY queue scope and transaction behavior to reject the replay premise",
+      "Trace LISTEN and NOTIFY compatibility separately to PgBouncer's pooling feature map",
+      "Keep durable jobs and use a supported listener only as a wake-up path, with catch-up and polling across outages",
+      "Give direct URLs and locators, and distinguish the architecture inference from documented behavior"
+    ]
+  },
   "recovery": {
     "fixture": "recovery",
     "request": "Resume the existing run under .research/resume. The previous session stopped after writing a trial record. Use its existing files and limits. This is a recovery exercise: no measurement, new trial, candidate code, or external action is authorized. Update only the existing state.md to reconcile the record, then explain the decision and actual consumed budget.",

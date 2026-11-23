@@ -82,7 +82,7 @@ class RunnerTests(unittest.TestCase):
             for variant in run.COMPARISON_ARMS:
                 args = argparse.Namespace(
                     backend=host, case="private", variant=variant, timeout=75,
-                    matched=True, model="fixed", max_budget_usd=None,
+                    matched=True, model="fixed", max_budget_usd=None, live_web=False,
                     case_spec={"request": "Trusted task", "checks": ["private grading key"], "tool_profile": "benchmark"},
                 )
                 prompt = run.invocation(args)
@@ -134,6 +134,21 @@ class RunnerTests(unittest.TestCase):
                     if host == "claude":
                         self.assertEqual(result["result_segments"][1]["result"], "Late reviewer note")
                         self.assertEqual(result["native_task_events"][0]["status"], "completed")
+
+    def test_live_web_remains_read_only_and_records_search_actions(self):
+        args = argparse.Namespace(
+            backend="codex", case="live-sources", variant="adaptive", timeout=80,
+            matched=False, model=None, live_web=True, case_spec=run.CASES["live-sources"],
+        )
+        command = run.command_line(args)
+        self.assertIn('web_search="live"', command)
+        self.assertIn("read-only", command)
+        self.assertIn("searches=4", run.invocation(args))
+        with tempfile.TemporaryDirectory() as scratch:
+            trace = Path(scratch) / "events.jsonl"
+            item = {"type": "web_search", "query": "official documentation"}
+            trace.write_text(json.dumps({"type": "item.completed", "item": item}))
+            self.assertEqual(run.summarize(trace, "codex")["tools"], [item])
 
 
 class FixtureTests(unittest.TestCase):

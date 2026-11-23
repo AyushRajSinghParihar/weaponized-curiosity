@@ -70,10 +70,15 @@ def invocation(args):
     if args.variant != "normal":
         prefix = "$" if args.backend == "codex" else "/"
         settings = COMPARISON_ARMS if args.matched else VARIANTS
-        options = f" {settings[args.variant]}" if settings[args.variant] else ""
+        if args.variant == "adaptive" and args.backend == "codex":
+            skill_request = "Use the weaponized-curiosity skill for this research."
+        else:
+            options = f" {settings[args.variant]}" if settings[args.variant] else ""
+            skill_request = f"{prefix}weaponized-curiosity{options}"
+        searches = 4 if args.live_web else 0
         request = (
-            f"{prefix}weaponized-curiosity{options} "
-            f"searches=0 minutes={args.timeout / 60:.2f} (elapsed target).\n\n{request}"
+            f"{skill_request} "
+            f"searches={searches} minutes={args.timeout / 60:.2f} (elapsed target).\n\n{request}"
         )
         if tool_profile(args) == "read-only":
             request += "\nKeep any research records in the final answer for this test."
@@ -95,9 +100,10 @@ def command_line(args):
     if args.backend == "codex":
         writable = profile != "read-only"
         sandbox = "workspace-write" if writable else "read-only"
+        web_search = "live" if args.live_web else "disabled"
         command = [
             "codex", "-a", "never", "exec", "--ignore-user-config",
-            "--ephemeral", "--json", "-s", sandbox, "-c", 'web_search="disabled"',
+            "--ephemeral", "--json", "-s", sandbox, "-c", f'web_search="{web_search}"',
             "-c", 'sandbox_workspace_write.network_access=false',
         ]
         if args.variant == "fallback":
@@ -172,7 +178,8 @@ def summarize(trace, backend):
             if item_kind == "agent_message":
                 result["answer"] = item["text"]
             elif item_kind in {"command_execution", "collab_tool_call", "file_change", "mcp_tool_call", "web_search", "dynamic_tool_call"}:
-                fields = ("type", "tool", "command", "exit_code", "status", "receiver_thread_ids", "agents_states")
+                fields = ("type", "tool", "command", "exit_code", "status", "receiver_thread_ids",
+                          "agents_states", "query", "action")
                 result["tools"].append({key: item[key] for key in fields if key in item})
         else:
             subtype = event.get("subtype")
@@ -227,6 +234,7 @@ def main():
     parser.add_argument("--bundle", type=Path, default=EVALS.parent)
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES, help="Trusted case JSON")
     parser.add_argument("--matched", action="store_true", help="Use the four-arm comparison protocol")
+    parser.add_argument("--live-web", action="store_true", help="Enable Codex live retrieval for a read-only case")
     parser.add_argument("--max-budget-usd", type=float, help="Claude Code request budget")
     parser.add_argument("--out", type=Path, required=True, help="A new output directory")
     args = parser.parse_args()
@@ -242,6 +250,8 @@ def main():
     args.case_spec = cases[args.case]
     if tool_profile(args) not in {"read-only", "benchmark", "recovery"}:
         parser.error("invalid tool profile")
+    if args.live_web and (args.backend != "codex" or args.matched or tool_profile(args) != "read-only"):
+        parser.error("--live-web requires a non-comparison, read-only Codex case")
 
     version = subprocess.check_output([args.backend, "--version"], text=True).strip()
     output = args.out.resolve()
@@ -256,7 +266,8 @@ def main():
         result.update({
             "backend": args.backend, "version": version, "case": args.case, "variant": args.variant,
             "elapsed_seconds": elapsed, "returncode": returncode, "timed_out": timeout,
-            "matched": args.matched, "timeout_seconds": args.timeout, "max_budget_usd": args.max_budget_usd,
+            "matched": args.matched, "live_web": args.live_web, "timeout_seconds": args.timeout,
+            "max_budget_usd": args.max_budget_usd,
             "model_override": args.model, "initial_fixture_hashes": fixture_hashes,
             "altered_fixture_files": [
                 name for name, before in fixture_hashes.items()

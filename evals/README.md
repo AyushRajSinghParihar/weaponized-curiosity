@@ -23,6 +23,8 @@ python3 evals/run.py claude qualitative fallback --out eval-output/claude-fallba
 
 Each run starts a fresh temporary Git workspace. The `normal` condition installs no bundle. Other conditions copy only the skill and references into that CLI's native discovery path. The evaluator uses fixture-only inputs. Web search is disabled for the pilot, so these runs exercise local evidence paths. The Claude Code fallback omits Agent and shell tools. The Codex fallback sets `agents.enabled=false`. Run outputs include the exact prompt, provider events, stderr, summary and selected research artifacts. Inspect them before sharing.
 
+To check actual source use, run `python3 evals/run.py codex live-sources adaptive --live-web --out eval-output/live-sources`. The read-only case uses live web retrieval. Review the trace and check pivotal claims against the linked source sections.
+
 | Variant | Intended treatment |
 | --- | --- |
 | `normal` | Ordinary agent, with the fixture's original permissions |
