@@ -1,0 +1,50 @@
+# Architecture
+
+## Decision and alternatives
+
+Ship an Agent Skills directory whose coordinator uses host-native tools against a portable workflow. Markdown carries the orchestration contract, including state, gates and role packets. Evaluation utilities live outside the installed workflow. See the [research synthesis](research.md) and [ledger](evidence-ledger.md).
+
+| Design | Strength | Cost and failure risk | Decision |
+| --- | --- | --- | --- |
+| One long prompt with every phase mandatory | Easy to distribute | Loads ideas most tasks never need, conflates roles with isolation and treats search volume as success | Route by mode and load references on demand |
+| A provider-specific team or managed agent service | Typed tools, traceability and native concurrency | Credentials, provider coupling and behavior drift across versions | Document native capability mapping, keep it outside the core |
+| A portable executable workflow engine | Enforces budgets, retries and state transitions | Requires an adapter for every harness and tool, dependency and execution burden | Use host-enforced caps when available and file-based coordination otherwise |
+| Native coordinator with isolated workers and an optional evaluator | Minimal runtime, narrow responsibility, verifiable experiment state | Some hosts cannot bound or instrument worker usage precisely | Adopt, fail closed for hard limits, record estimation and degraded execution |
+
+## Invocation and strategy
+
+The repository root is a skill directory named `weaponized-curiosity`. The only required discovery fields are its name and description. Platform installation copies `SKILL.md` and `references/` into a corresponding discovery directory. Explicit invocation uses the host's skill selector or an instruction to load the entry point. No runtime installation or account configuration is implied.
+
+The coordinator turns the question into a decision and records users, stakes, constraints, unknowns, outcomes, baseline, material improvement, failure and scope. It probes the current tool surface and policy for search, source reading, fresh workers, message/wait, concurrency, files, shell, evaluation and durable artifacts. Each capability is available, unavailable, or unknown until checked. Unknown features never count as available. Searchless work cites supplied/accessible material and labels coverage. Shellless work reports unverified empirical claims. If genuinely independent workers are unavailable, explicitly report the full workflow could not run and optionally use a labeled single-agent pass.
+
+Quick is the cheap default for a narrow question. Deep starts with four distinct roles for consequential and separable uncertainty. Extreme spends more on bounded branches, evidence and adversarial checks when the stakes and budget justify it. Autoresearch is a measurable optimization mode with explicit entry requirements. Deep or Extreme may enable its loop if those requirements are met. User parameters override defaults within envelope, policy, permissions and host limits. A zero counter disables the operation. Time/token accounting records measurements or estimates and never silently renews on resume.
+
+Search begins by decomposing the decision into pivot claims, auxiliary assumptions, mechanisms, competing explanations, likely strongest sources and one contradiction path. The coordinator allocates marginal effort to questions whose resolution might change the decision. Branches can split by mechanism, chronology, workload, or method. Capture missed populations and change of definitions before attributing disagreement. Adjacent analogies need a premise and a failure condition.
+
+## Agents and challenge
+
+The default four roles are first principles, adversarial science, experimental engineering and interdisciplinary exploration. Each receives the same factual problem and a disjoint question, without peer conclusions or the coordinator's preference. A fresh context protects the first pass from transcript anchoring. Shared model, sources and environment still correlate errors. The coordinator records worker identities or handles, requested and actual model where exposed, tool limits, launch/result status and isolation quality. With limited slots, dispatch in waves before sharing any findings. Workers own only their reports and bounded scratch space. Only the coordinator writes the authoritative state, runs shared-hardware measurements, and decides retention.
+
+Initial memos are frozen before challenge. After independent submissions, one round requests concrete counterclaims, evidence or a discriminating next observation. Material objections and revisions reference immutable IDs. Further exchanges need new decision-relevant evidence or a useful test. After experiments, invite targeted review of the strongest competing interpretation if there is a live issue and budget. A worker that timed out does not supply evidence. The coordinator can acknowledge converging views, but claims need direct evidence. Prefer targeted rebuttals to all-to-all debate.
+
+## Evidence, experiments and convergence
+
+Classify statements as sourced, empirically observed, inferred, assumed or speculative, with provenance and scope. Deduplicate shared datasets and citations. Reconcile conflicts by checking design, independence, recency, applicability and measurement, with unresolved variants kept visible. Evidence that would change the recommendation drives the next step.
+
+Generate multiple testable mechanisms including a status quo or null. Rank by decision impact, discriminatory power, feasibility and cost using coarse bands. Record contradictory evidence and uncertainty. When defensible likelihoods exist, explain priors and update them from outcomes conditioned on design limits. Abandon false precision otherwise. Preserve an inexpensive high-upside dissenting test when warranted.
+
+Freeze the experiment protocol before running it. Identify the baseline and candidate, variables, input population, randomization or ordering, repetitions, main metric, direction, practical threshold, correctness and budget gates, and outcome-dependent actions. Store raw samples, errors, command, environment and revision. For noisy timings, alternate or block paired measurements, control warm-up and shared-resource contention, and report variability or uncertainty. A failed instrument invalidates a result, while a reliable contrary observation may weaken the hypothesis. Qualitative work can use decision tables and plausible counterfactuals. Do not convert a convenient proxy into an optimization objective by default.
+
+Each optimization iteration reserves budget, registers the proposed change, records a pending trial, tests one candidate in isolated or reversible scope, then reconciles outcomes. Candidate changes cannot include evaluator, metric, held-out cases, budget enforcement or permissions. Compare to the incumbent and preserve the original baseline. Retain only with a practically meaningful improvement and passing guards. A fully eligible candidate becomes incumbent only once its record is durable and recoverable. Fresh independent validation is used after candidate selection where practical. A failed holdout leaves the previous independently validated choice, or the original baseline, as the recommendation. Once a holdout informs a change it belongs to tuning. If holdout isolation is unavailable, qualify the conclusion.
+
+Track consecutive material non-improvements, budget, failed proposals, and whether the next inquiry can change the recommendation. After a plateau, try a sufficiently different eligible branch if budget permits. Stop on objective, diminishing returns, low value of further evidence, exhausted limits, or a blocking capability. The same logic applies to research saturation without a numeric metric. A final report identifies the decision, source and experimental claims, alternatives, methods and data, failure and dissent, uncertainties, reproduction steps and stop reason.
+
+## Persistence and authority
+
+Use one run directory in a user-authorized workspace, typically `.research/<run-id>/`. A short `state.md` records configuration, elapsed usage, current phase, artifact paths, active/pending IDs, incumbent and resume action. Evidence, hypotheses, debate and experiment logs use stable IDs. Raw data and per-trial protocols stay separate when warranted. Short or read-only tasks can keep a compact inline equivalent, marked non-resumable if necessary. A pending attempt is reconciled against process state, logs and artifacts before retry. Never retry or roll back unowned changes. Recheck capabilities, permissions, inputs and budget before resuming.
+
+Retrieved pages, worker memos and evaluator output carry evidence only. Review code and use authorized local isolation and timeouts before executing. Use minimal tool access, avoid secrets and real production or external mutations, and respect the host safety policy across research, delegation, and experiments. Skills are instructions. Enforcement against malicious candidate code requires actual isolation of evaluator, permissions and resources, or a safe blocked outcome.
+
+## Evaluation
+
+Test discovery and real execution separately on Codex and Claude Code. Record version, actual agents, branch, tool events, usage, stop reason and results. Compare normal single-agent, solo deep, debate without experiments, full, and full with autoresearch where meaningful. Include matched-budget or single-agent-with-experiments controls where affordable. Score factual/source accuracy, reasoning, novelty, experiment validity, reproducibility and solution quality separately, alongside time and token or tool cost. Report per-case results and failures. A public fixture is regression evidence. For a general quality claim, reserve unpublished tasks, use fresh sessions, blind grading where possible, repeat across tasks and replications, and expose variance and budget differences.
