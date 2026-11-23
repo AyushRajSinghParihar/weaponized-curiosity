@@ -1,9 +1,21 @@
 # Installation and platform mapping
 
-Clone the private repository using a GitHub account with access.
+## With the Skills CLI
+
+Run from the target project. The Skills CLI requires Node.js 22.20 or later.
 
 ```sh
-gh repo clone ayushrajsinghparihar/weaponized-curiosity
+npx skills add AyushRajSinghParihar/weaponized-curiosity --skill weaponized-curiosity
+```
+
+Select the clients that should discover it. The tool can install for more than one client. [Skills CLI installation reference](https://github.com/vercel-labs/skills#install-a-skill)
+
+## Manual installation
+
+Clone the public repository.
+
+```sh
+git clone https://github.com/AyushRajSinghParihar/weaponized-curiosity.git
 ```
 
 The installable directory is named `weaponized-curiosity`. Use the source checkout path in the examples and run from the **target research workspace**, where the host should find the skill. Choose one location per host to avoid duplicate discovery. Install into a new destination. For upgrades, review the new bundle and replace the previously installed copy deliberately.
@@ -16,7 +28,7 @@ Codex discovers repository and user skills in `.agents/skills/`. For a project-l
 wc_src=/absolute/path/to/weaponized-curiosity
 wc_dest=.agents/skills/weaponized-curiosity
 test ! -e "$wc_dest" && mkdir -p "$wc_dest" &&
-  cp "$wc_src/SKILL.md" "$wc_dest/" &&
+  cp "$wc_src/SKILL.md" "$wc_src/LICENSE" "$wc_dest/" &&
   cp -R "$wc_src/references" "$wc_dest/"
 ```
 
@@ -32,7 +44,7 @@ Use the native project skill directory:
 wc_src=/absolute/path/to/weaponized-curiosity
 wc_dest=.claude/skills/weaponized-curiosity
 test ! -e "$wc_dest" && mkdir -p "$wc_dest" &&
-  cp "$wc_src/SKILL.md" "$wc_dest/" &&
+  cp "$wc_src/SKILL.md" "$wc_src/LICENSE" "$wc_dest/" &&
   cp -R "$wc_src/references" "$wc_dest/"
 ```
 
