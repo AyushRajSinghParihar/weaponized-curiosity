@@ -53,6 +53,6 @@ The smallest decision-changing test uses representative PDFs in both modes, matc
 
 ## Find the point at which you would switch
 
-> Use Weaponized Curiosity to research whether to switch from serial to overlapping reloads. The process peaks at 5.2 GiB before reload. The machine has 8 GiB and needs 1.5 GiB free. Each generation can add 1.0 GiB while loading.
+> Use Weaponized Curiosity to research whether to replace our Postgres job queue. Our deployment can leave 1,200 jobs waiting, and all have to finish within 120 seconds. Workers can take 30 seconds to restart. We measured the queue draining at 18 jobs per second after restart.
 
-In this illustrative example, keep serial reloads. One load brings modeled usage to 6.2 GiB, below the 6.5 GiB ceiling. Two overlapping loads could bring it to 7.2 GiB. Reconsider overlap if the combined load stays at or below 1.3 GiB at the 5.2 GiB resident peak. The smallest useful check is a production-sized reload in staging with both generations active, measuring the memory high-water mark. Verify the worst-case bound before promising the hard limit.
+In this illustrative example, keep the existing queue if the observed drain rate holds at peak. With 90 seconds left after restart, it needs to clear 1,200 jobs at about 13.34 jobs per second, net of new arrivals. At 18 jobs per second with no new arrivals, the modeled total is about 97 seconds. Reconsider if a peak-sized staging restart with realistic arrivals consistently falls below the required net rate. Diagnose whether dispatch or the workers themselves are the bottleneck before changing the queue.

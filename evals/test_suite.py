@@ -10,6 +10,7 @@ import tempfile
 import unittest
 
 import compare
+import guarded_membership
 import run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -152,6 +153,17 @@ class RunnerTests(unittest.TestCase):
 
 
 class FixtureTests(unittest.TestCase):
+    def test_guarded_membership_detects_memory_regression_despite_exact_outputs(self):
+        wide, small = guarded_membership.workload(41)
+        candidates = ROOT / "evals" / "fixtures" / "guarded-candidates"
+        _, value_index = guarded_membership.load_frozen(candidates / "value_index.py")
+        _, query_index = guarded_membership.load_frozen(candidates / "query_index.py")
+        for candidate in (value_index, query_index):
+            self.assertTrue(guarded_membership.exact_match(candidate, wide + small))
+        self.assertGreater(guarded_membership.peak_traced_bytes(value_index, wide), guarded_membership.MEMORY_CAP)
+        self.assertLessEqual(guarded_membership.peak_traced_bytes(query_index, wide), guarded_membership.MEMORY_CAP)
+        self.assertFalse(guarded_membership.exact_match(lambda values, queries: [0] * len(queries), small))
+
     def test_algorithm_contract(self):
         source = ROOT / "evals" / "fixtures" / "algorithm" / "membership.py"
         spec = importlib.util.spec_from_file_location("membership", source)

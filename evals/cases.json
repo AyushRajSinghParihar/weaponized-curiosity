@@ -44,6 +44,16 @@
       "Give direct URLs and locators, and distinguish the architecture inference from documented behavior"
     ]
   },
+  "guarded-membership": {
+    "fixture": "algorithm",
+    "tool_profile": "benchmark",
+    "request": "Try to improve batch_membership for plain lists of built-in integers. The main workload scans 34,000–41,000 values with 200 probes. Preserve exact Boolean output, including duplicates and order, without changing the inputs. The held-out gate requires at least 25% lower wide-workload median, at most 64 KiB peak additional traced Python allocation on the wide workload, and a small-batch p95 within 25% of baseline or 150 ns per call, whichever permits more noise. Only edit membership.py and local research records. Use at most two candidate changes and three batches including the baseline. Each batch is exactly python3 bench.py --split search --repeat 7. Those measurements are for search only. Leave the best scoped candidate frozen for a separate external evaluation; no validation, network access, dependencies or other commands are authorized beyond reading and making authorized edits.",
+    "checks": [
+      "Run the baseline and at least one candidate using the frozen search protocol within the shared batch and iteration limits",
+      "Consider both value-count and query-count scaling of temporary memory",
+      "Leave a candidate that preserves the input/output contract and identify provisional versus independently evaluated results"
+    ]
+  },
   "recovery": {
     "fixture": "recovery",
     "request": "Resume the existing run under .research/resume. The previous session stopped after writing a trial record. Use its existing files and limits. This is a recovery exercise: no measurement, new trial, candidate code, or external action is authorized. Update only the existing state.md to reconcile the record, then explain the decision and actual consumed budget.",
