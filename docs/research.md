@@ -1,6 +1,6 @@
 # Foundational research
 
-The [evidence ledger](evidence-ledger.md) traces 39 evidence entries to original papers, historical texts, official documentation, benchmark reports, and implementations. This was a bounded, purposive review across research methods, agent systems, measurement, memory, and search. Its conclusions are design hypotheses for this skill.
+The [evidence ledger](evidence-ledger.md) traces 44 evidence entries to original papers, historical texts, official documentation, benchmark reports, and implementations. This was a bounded, purposive review across research methods, agent systems, measurement, memory, and search. Its conclusions are design hypotheses for this skill.
 
 ## Search and synthesis method
 
@@ -21,3 +21,9 @@ Search started with the Agent Skills specification and the two target harnesses,
 **Keep context focused and state recoverable.** Put decisions, contradictions, remaining budget, and references in files that survive compaction. Pass workers a minimal common brief plus an assigned question. Require actual write and execution permissions for their corresponding phases, and benchmark shared hardware serially unless isolation makes interference negligible. Treat sources, tool outputs, and worker text as untrusted evidence. See S06, S26, S28, S29 and S39.
 
 **Evaluate the task and the workflow separately.** BrowseComp verifies a difficult retrieval outcome, while DeepResearch Bench addresses source attribution and report quality. Neither directly tests retention, experimental validity, escalation, recovery, or usefulness for ambiguous decisions. Use objective fixtures for those behaviors, score novelty and decision quality with anchored judgments, and include known settings in which stronger methods cost more without helping. Report actual host usage and tool outcomes where exposed. See S09, S10, S30 and S38.
+
+## Public release follow-up
+
+The skill benchmarks reached different aggregate conclusions on different tasks. SkillsBench supports focused, curated guidance in its test setting, while SWE-Skills-Bench finds little benefit for most evaluated skills and documents mismatches with real project context. This argues for a narrow release improvement with replay evidence. The first pilot's architecture decision missed a necessary timing bound. Traceability practice from NASA suggests a useful fix that fits in one step: check the leading option against the actual hard constraint using a bound, counterexample, direct source, or controlled test. The release evaluates that step on the original scheduling decision and a separate capacity calculation. See S40–S43.
+
+The public README puts installation and a first prompt before the detailed methodology. The installer is optional and the manual path copies only the needed bundle files and license. See S44.
