@@ -1,6 +1,6 @@
 # Weaponized Curiosity
 
-![A magnifying loupe and a worn pencil beside marked research notes.](assets/readme-banner.jpg)
+![A black linocut raven inspecting a red pebble.](assets/readme-banner.jpg)
 
 Use Weaponized Curiosity when you want your agent to research a question, compare options, or test an idea before you commit to it. Give it the question in your own words.
 
@@ -57,6 +57,8 @@ On the included membership benchmark, the optimization run took median search ti
 Codex and Claude Code were also tested on architecture decisions, conflicting sources, product ideas, and checkpoint recovery. A replay caught a daily batch that could leave a job waiting almost 24 hours despite a 12-hour deadline. The evaluation report includes mistakes, costs, and which stages actually ran. [Evaluation results](docs/evaluation/results.md)
 
 ## Dig in
+
+The research workflow was inspired by [Archie Sengupta’s tweet](https://x.com/archiexzzz/status/2124919619471474790).
 
 Read why the workflow uses independent first passes and tests that can change the decision. [Research notes](docs/research.md) · [Source ledger](docs/evidence-ledger.md) · [Architecture](docs/architecture.md)
 
