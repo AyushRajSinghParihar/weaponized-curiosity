@@ -21,17 +21,23 @@ VARIANTS = {
     "auto": "mode=deep subagents=4 debate_rounds=1 experiments=4 iterations=2 autoresearch=on",
     "fallback": "mode=deep subagents=4 debate_rounds=1 experiments=0",
     "loop": "mode=autoresearch subagents=0 experiments=4 iterations=2",
+    "resume": "mode=autoresearch",
 }
 
 
 def prepare(workspace, args):
     subprocess.run(["git", "init", "-q", str(workspace)], check=True)
     fixture = CASES[args.case].get("fixture")
+    fixture_hashes = {}
     if fixture:
-        shutil.copytree(EVALS / "fixtures" / fixture, workspace, dirs_exist_ok=True)
-    fixture_hashes = {
-        path.name: digest(path) for path in workspace.iterdir() if path.is_file()
-    }
+        shutil.copytree(
+            EVALS / "fixtures" / fixture, workspace, dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+        )
+        for path in workspace.rglob("*"):
+            relative = path.relative_to(workspace)
+            if relative.parts[0] != ".git" and path.is_file():
+                fixture_hashes[relative.as_posix()] = digest(path)
     if args.variant == "normal":
         return fixture_hashes
     discovery = ".agents" if args.backend == "codex" else ".claude"
@@ -50,14 +56,15 @@ def invocation(args):
             f"{prefix}weaponized-curiosity {VARIANTS[args.variant]} "
             f"searches=0 minutes={args.timeout / 60:.2f} (elapsed target).\n\n{request}"
         )
-        if args.case != "algorithm":
+        if args.case not in {"algorithm", "recovery"}:
             request += "\nKeep any research records in the final answer for this test."
     return request
 
 
 def command_line(args):
     if args.backend == "codex":
-        sandbox = "workspace-write" if args.case == "algorithm" else "read-only"
+        writable = args.case in {"algorithm", "recovery"}
+        sandbox = "workspace-write" if writable else "read-only"
         command = [
             "codex", "-a", "never", "exec", "--ignore-user-config",
             "--ephemeral", "--json", "-s", sandbox, "-c", 'web_search="disabled"',
@@ -70,7 +77,7 @@ def command_line(args):
         return command + ["-"]
 
     allowed = ["Read", "Glob", "Grep", "Skill"]
-    if args.case == "algorithm":
+    if args.case in {"algorithm", "recovery"}:
         allowed.extend(["Write", "Edit"])
     if args.variant in {"debate", "full", "auto"}:
         allowed.append("Agent")
@@ -136,10 +143,15 @@ def summarize(trace, backend):
                 fields = ("type", "tool", "command", "exit_code", "status", "receiver_thread_ids", "agents_states")
                 result["tools"].append({key: item[key] for key in fields if key in item})
         else:
-            if kind == "system" and event.get("subtype") == "init":
+            subtype = event.get("subtype")
+            if kind == "system" and subtype == "init":
                 result["model"] = event.get("model")
                 result["listed_skills"] = event.get("skills")
                 result["listed_commands"] = event.get("slash_commands")
+            elif kind == "system" and subtype in {"task_started", "task_notification"}:
+                keys = ("subtype", "task_id", "status", "tool_use_id")
+                task_event = {key: event[key] for key in keys if key in event}
+                result.setdefault("native_task_events", []).append(task_event)
             elif kind == "assistant":
                 for block in event.get("message", {}).get("content", []):
                     if block.get("type") == "tool_use":
@@ -151,15 +163,21 @@ def summarize(trace, backend):
                             **{key: tool_input[key] for key in detail_keys if key in tool_input},
                         })
             elif kind == "result":
-                result["usage"] = event.get("usage")
+                keys = ("result", "usage", "subtype", "duration_ms", "total_cost_usd")
+                segment = {key: event[key] for key in keys if key in event}
+                segments = result.setdefault("result_segments", [])
+                segments.append(segment)
+                if len(segments) == 1:
+                    result["usage"] = event.get("usage")
+                    result["answer"] = event.get("result")
+                    result["provider_subtype"] = subtype
                 result["provider_cost_usd"] = event.get("total_cost_usd")
-                result["answer"] = event.get("result")
-                result["provider_subtype"] = event.get("subtype")
     return result
 
 
 def copy_artifacts(workspace, output):
-    paths = [workspace / "membership.py", workspace / ".research"]
+    names = ("membership.py", "membership-research.md", ".research")
+    paths = [workspace / name for name in names]
     for path in paths:
         if path.is_file() and not path.is_symlink():
             shutil.copy2(path, output / path.name)
