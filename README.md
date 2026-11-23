@@ -1,66 +1,65 @@
 # Weaponized Curiosity
 
-**An Agent Skill for turning hard questions into decisions you can defend.**
+![A magnifying loupe and a worn pencil beside marked research notes.](assets/readme-banner.jpg)
 
-Give your agent a decision, the evidence it can access, and a budget. It will investigate competing explanations, look for evidence that could reverse the decision, and run small tests when there is something meaningful to measure. For an optimization task, it can track candidates, keep improvements that pass the guards, and explain why it stopped.
+Use Weaponized Curiosity when you want your agent to research a question, compare options, or test an idea before you commit to it. Give it the question in your own words.
 
-Works with Codex and Claude Code through their native skill directories. The [Agent Skills](https://agentskills.io/specification) bundle is Markdown. It uses the tools and permissions your host already provides.
+> Use Weaponized Curiosity to research whether we should keep our Postgres job queue or move to a dedicated broker. Use our current workload and tell me what would make switching worthwhile.
 
-## Quick start
+That’s a complete prompt. The skill picks **Quick** for a focused question and **Deep** when a decision needs more digging. Add a mode or budget when you have one in mind.
 
-Install into the current project with the Skills CLI:
+## Install
+
+Run this from your project and choose Codex, Claude Code, or both.
 
 ```sh
 npx skills add AyushRajSinghParihar/weaponized-curiosity --skill weaponized-curiosity
 ```
 
-Select Codex, Claude Code, or both when prompted. The [installation guide](docs/installation.md) also covers a manual install with Git and no Node.js dependency.
+You can ask for the skill by name or invoke it with `$weaponized-curiosity` in Codex and `/weaponized-curiosity` in Claude Code. The manual install only needs Git. [Installation guide](docs/installation.md)
 
-Invoke **`$weaponized-curiosity`** in Codex or **`/weaponized-curiosity`** in Claude Code, followed by a task. Start with a decision you are about to make:
+## Make it your go-to for research
+
+If you want to be able to say “research this,” put a line like this in your project instructions. Use `AGENTS.md` for Codex or `CLAUDE.md` for Claude Code.
+
+> When I ask you to research something or compare options using evidence, use `weaponized-curiosity`. Choose the lightest mode that can answer the question.
+
+## When to pick a mode
+
+| Mode | When I’d use it |
+| --- | --- |
+| **Quick** | Check a claim, compare two options, or see whether a plan meets a hard requirement. |
+| **Deep** | Work through conflicting evidence or a consequential decision. The agent can split the research among up to four independent workers where supported, then compare what they found. |
+| **Extreme** | Give a difficult question more time for source review, competing explanations, and replication. |
+| **Autoresearch** | Improve something you can measure. Set a target and a trial limit, then let the agent test changes against a fixed evaluator. |
+
+You can give limits in plain English or use settings like `searches=12 experiments=2 minutes=10`. Use `experiments=0` for research and analysis only. [Mode settings and budgets](references/operations.md#configuration-and-accounting)
+
+For example, here’s a bounded performance run.
 
 ```text
-mode=quick searches=0 experiments=0
-We send notifications in a daily batch and promise delivery within 12 hours.
-Can we keep the batch, or do we need a queue? Use the facts I've provided.
-Check the tightest constraint and tell me what would change your answer.
+Use Weaponized Curiosity in Autoresearch mode. Cut p95 on my local benchmark
+by at least 10% and keep the outputs identical. Edit only src/parser.py in
+an isolated copy. Use at most three candidate changes and five measurement
+batches. Save one batch for validation and include the raw timings.
 ```
 
-## Choose how far to go
+## What comes back
 
-| Mode | Use it when | What you get |
-| --- | --- | --- |
-| **Quick** | The decision is narrow, reversible, or time-sensitive | A concise recommendation, the decisive evidence, and a check of the hardest requirement |
-| **Deep** | Sources disagree or the decision has important unknowns | Separate research threads, up to four fresh-context workers, focused critique, and useful tests |
-| **Extreme** | Several unresolved questions warrant a larger authorized budget | Broader source coverage, competing research branches, and more opportunities for replication |
-| **Autoresearch** | You have an editable candidate, a baseline, and a reliable metric | A bounded cycle of measured changes, retained and rejected candidates, and final validation where feasible |
+For a quick question, expect an answer, the evidence behind it, and what would change the recommendation. Longer runs can save sources, hypotheses, trial results, and a checkpoint under `.research/<run-id>/`. Give the agent that path when you want to pick up where it left off.
 
-Set limits directly in the prompt, such as `subagents=4 searches=12 experiments=2 minutes=10`. For a performance task:
+The skill uses the tools and permissions your agent already has. If a tool is missing, the report says what the agent could check and where the evidence stops. [Example sessions](docs/examples.md) · [Skill instructions](SKILL.md)
 
-```text
-mode=autoresearch iterations=3 experiments=5
-Reduce p95 on my local benchmark by at least 10% with exact output equality.
-Edit only src/parser.py in an isolated copy. Keep the evaluator fixed.
-Reserve one measurement batch for a fresh validation run. Record raw timings.
-```
+## What we’ve tested
 
-The [configuration reference](references/operations.md#configuration-and-accounting) defines what counts toward each budget. Use `experiments=0` for analysis only. A usable recommendation is still possible when worker, search, or execution tools are unavailable. The skill reports those limits.
+On the included membership benchmark, the optimization run took median search time from **100.462 ms to 0.732 ms** and passed the separate validation split. A regular Codex run also found a correct set-based solution. The validation cases were visible to the agent. [Raw timings](docs/evaluation/membership-auto.json)
 
-## What a run leaves behind
+Codex and Claude Code were also tested on architecture decisions, conflicting sources, product ideas, and checkpoint recovery. A replay caught a daily batch that could leave a job waiting almost 24 hours despite a 12-hour deadline. The evaluation report includes mistakes, costs, and which stages actually ran. [Evaluation results](docs/evaluation/results.md)
 
-A Quick run can finish in the answer. Longer runs can write an evidence ledger, hypothesis ledger, trial records, and a checkpoint under an authorized `.research/<run-id>/` directory. Resume by giving the agent that path and asking it to reconcile existing work and continue within the remaining budget.
+## Dig in
 
-See the [example sessions](docs/examples.md) for a measured algorithm change and a conflicting-evidence decision. For the complete workflow, start with [SKILL.md](SKILL.md).
+Read why the workflow uses independent first passes and tests that can change the decision. [Research notes](docs/research.md) · [Source ledger](docs/evidence-ledger.md) · [Architecture](docs/architecture.md)
 
-## Tested in practice
-
-- **Controlled optimization.** On the supplied membership benchmark, the retained candidate reduced median search-suite runtime from 100.462 ms to 0.732 ms. It passed a separate, visible validation split. An ordinary Codex run also found a correct set-based solution. The benchmark measures a candidate improvement on one fixture. [Raw measurements](docs/evaluation/membership-auto.json)
-- **Real agent runs.** Codex and Claude Code were tested on architecture, performance, scientific reasoning, product ideas, conflicting evidence, qualitative decisions, optimization, and checkpoint recovery. The reports identify which worker and tool events were independently observable. [Evaluation results](docs/evaluation/results.md)
-- **An experiment-driven revision.** Live runs exposed a trial-budget overrun. Replays after a targeted instruction change stayed within the two-batch cap on both hosts. [Improvement protocol](docs/evaluation/improvement-protocol.md)
-
-The [research synthesis](docs/research.md) and [evidence ledger](docs/evidence-ledger.md) explain why the skill favors independent first passes, selective critique, and tests that could change the decision. The [architecture](docs/architecture.md) details scope, limitations, and recovery.
-
-## Contribute
-
-Replay a case in the [evaluation suite](evals/README.md) or propose a fixture for a decision the skill mishandles. We welcome changes with a concrete failure, a reproducible check, and results with and without the proposed change. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Found a question the skill handles badly? A prompt, what happened, and what a better answer would do are enough to get started. [Evaluation suite](evals/README.md) · [Contributing](CONTRIBUTING.md)
 
 [MIT License](LICENSE)
