@@ -9,6 +9,7 @@ import signal
 import sys
 import tempfile
 import unittest
+from urllib.parse import unquote, urlsplit
 
 import compare
 import guarded_membership
@@ -19,6 +20,26 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class BundleTests(unittest.TestCase):
+    def test_local_markdown_links_resolve(self):
+        pages = [
+            ROOT / "SKILL.md", ROOT / "README.md", ROOT / "CONTRIBUTING.md",
+            ROOT / "evals" / "README.md", ROOT / "docs" / "installation.md",
+            ROOT / "docs" / "examples.md", *sorted((ROOT / "references").glob("*.md")),
+        ]
+        for page in pages:
+            content = re.sub(r"^\x60{3}.*?^\x60{3}\s*$", "", page.read_text(), flags=re.MULTILINE | re.DOTALL)
+            for target in re.findall(r"\]\(([^)\s]+)\)", content):
+                location = urlsplit(target)
+                if location.scheme or location.netloc:
+                    continue
+                destination = page.parent / unquote(location.path) if location.path else page
+                with self.subTest(page=page.relative_to(ROOT), target=target):
+                    self.assertTrue(destination.exists(), f"Missing Markdown link target: {destination}")
+                    if location.fragment and destination.suffix == ".md":
+                        headings = re.findall(r"^#{1,6}\s+(.+)$", destination.read_text(), re.MULTILINE)
+                        anchors = {re.sub(r"[^\w -]", "", heading.lower()).replace(" ", "-") for heading in headings}
+                        self.assertIn(unquote(location.fragment), anchors)
+
     def test_metadata_and_progressive_links(self):
         skill = (ROOT / "SKILL.md").read_text()
         delimiter, metadata, body = skill.split("---\n", 2)
@@ -55,6 +76,12 @@ class BundleTests(unittest.TestCase):
                             sorted(p.name for p in (skill / "references").iterdir()),
                             sorted(p.name for p in (ROOT / "references").iterdir()),
                         )
+                        before = run.bundle_fingerprint(skill)
+                        (skill / "references" / "report.md").write_text("changed reference\n")
+                        after = run.bundle_fingerprint(skill)
+                        self.assertNotEqual(before["sha256"], after["sha256"])
+                        self.assertEqual(before["files"]["SKILL.md"], after["files"]["SKILL.md"])
+                        self.assertIn("LICENSE", before["files"])
 
 
 class RunnerTests(unittest.TestCase):
@@ -92,6 +119,7 @@ class RunnerTests(unittest.TestCase):
                 self.assertIn("Trusted task", prompt)
                 self.assertIn("75 seconds", prompt)
                 self.assertNotIn("private grading key", prompt)
+                self.assertEqual("requires two fresh native workers" in prompt, variant in {"debate", "full"})
                 commands.append(run.command_line(args))
             self.assertTrue(all(command == commands[0] for command in commands))
 

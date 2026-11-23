@@ -128,6 +128,8 @@ def verify(prepared, replay, stage):
     failures = [f"{key} should be {value!r}" for key, value in expected.items() if fields.get(key) != value]
     if set(summary["altered_fixture_files"]) != {(RUN / "state.md").as_posix()}:
         failures.append("fixture edits must be confined to state.md")
+    if summary.get("new_workspace_files") or summary.get("altered_bundle_files"):
+        failures.append("resume created a file or changed the installed bundle")
     if summary["returncode"] or summary["timed_out"]:
         failures.append("resume CLI did not complete")
     original = {file.relative_to(before) for file in before.rglob("*") if file.is_file()}

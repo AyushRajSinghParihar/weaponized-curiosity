@@ -18,6 +18,8 @@ Clone the public repository.
 git clone https://github.com/AyushRajSinghParihar/weaponized-curiosity.git
 ```
 
+For a reproducible install, add `--branch <published-tag> --single-branch` to the clone command and use that checkout below.
+
 The installable directory is named `weaponized-curiosity`. Use the source checkout path in the examples and run from the **target research workspace**, where the host should find the skill. Choose one location per host to avoid duplicate discovery. Install into a new destination. For upgrades, review the new bundle and replace the previously installed copy deliberately.
 
 ## OpenAI Codex

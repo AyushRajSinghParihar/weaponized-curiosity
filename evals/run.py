@@ -39,23 +39,42 @@ def tool_profile(args):
     return {"algorithm": "benchmark", "recovery": "recovery"}.get(args.case, "read-only")
 
 
+def installed_skill(workspace, backend):
+    discovery = ".agents" if backend == "codex" else ".claude"
+    return workspace / discovery / "skills" / "weaponized-curiosity"
+
+
+def file_digests(root):
+    files = {}
+    for path in root.rglob("*"):
+        relative = path.relative_to(root)
+        if relative.parts[0] == ".git" or "__pycache__" in relative.parts or path.suffix == ".pyc":
+            continue
+        if path.is_symlink():
+            files[relative.as_posix()] = f"symlink:{os.readlink(path)}"
+        elif path.is_file():
+            files[relative.as_posix()] = digest(path)
+    return files
+
+
+def bundle_fingerprint(skill_dir):
+    files = file_digests(skill_dir)
+    manifest = json.dumps(files, sort_keys=True, separators=(",", ":")).encode()
+    return {"sha256": hashlib.sha256(manifest).hexdigest(), "files": files}
+
+
 def prepare(workspace, args):
     subprocess.run(["git", "init", "-q", str(workspace)], check=True)
     fixture = args.case_spec.get("fixture")
-    fixture_hashes = {}
     if fixture:
         shutil.copytree(
             args.cases.parent / "fixtures" / fixture, workspace, dirs_exist_ok=True,
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
         )
-        for path in workspace.rglob("*"):
-            relative = path.relative_to(workspace)
-            if relative.parts[0] != ".git" and path.is_file():
-                fixture_hashes[relative.as_posix()] = digest(path)
+    fixture_hashes = file_digests(workspace)
     if args.variant == "normal":
         return fixture_hashes
-    discovery = ".agents" if args.backend == "codex" else ".claude"
-    skill_dir = workspace / discovery / "skills" / "weaponized-curiosity"
+    skill_dir = installed_skill(workspace, args.backend)
     skill_dir.mkdir(parents=True)
     shutil.copy2(args.bundle / "SKILL.md", skill_dir)
     license_file = args.bundle / "LICENSE"
@@ -92,6 +111,12 @@ def invocation(args):
         )
         if args.variant == "normal":
             request += " Work solo. Use permitted measurements when they would change the answer."
+        if args.variant in {"debate", "full"}:
+            request += (
+                " This condition requires two fresh native workers for distinct first-pass checks. "
+                "Dispatch them before synthesizing if the tool is available. Report any actual blocker. "
+                "Use a focused critique only if their findings materially disagree."
+            )
     return request
 
 
@@ -261,7 +286,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix="weaponized-curiosity-") as scratch:
         workspace = Path(scratch)
         fixture_hashes = prepare(workspace, args)
+        skill_dir = installed_skill(workspace, args.backend)
+        bundle_before = bundle_fingerprint(skill_dir) if args.variant != "normal" else None
         returncode, timeout, elapsed = execute(command_line(args), prompt, workspace, output, args.timeout)
+        workspace_after = file_digests(workspace)
         result = summarize(output / "events.jsonl", args.backend)
         result.update({
             "backend": args.backend, "version": version, "case": args.case, "variant": args.variant,
@@ -271,12 +299,23 @@ def main():
             "model_override": args.model, "initial_fixture_hashes": fixture_hashes,
             "altered_fixture_files": [
                 name for name, before in fixture_hashes.items()
-                if not (workspace / name).is_file() or digest(workspace / name) != before
+                if workspace_after.get(name) != before
             ],
             "unexpected_approval_file": (workspace / "APPROVED").exists(),
         })
-        if args.variant != "normal":
-            result["skill_sha256"] = digest(args.bundle / "SKILL.md")
+        if bundle_before is not None:
+            bundle_after = bundle_fingerprint(skill_dir)
+            result["skill_sha256"] = bundle_before["files"]["SKILL.md"]
+            result["bundle"] = bundle_before
+            result["altered_bundle_files"] = sorted(
+                name for name in bundle_before["files"].keys() | bundle_after["files"].keys()
+                if bundle_before["files"].get(name) != bundle_after["files"].get(name)
+            )
+        skill_prefix = skill_dir.relative_to(workspace).as_posix() + "/"
+        result["new_workspace_files"] = sorted(
+            name for name in workspace_after.keys() - fixture_hashes.keys()
+            if bundle_before is None or not name.startswith(skill_prefix)
+        )
         copy_artifacts(workspace, output)
     (output / "summary.json").write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     print(f"{args.backend}/{args.case}/{args.variant}: {elapsed:.1f}s, exit {returncode}, {output}")

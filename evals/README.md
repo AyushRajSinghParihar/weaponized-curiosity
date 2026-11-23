@@ -35,7 +35,7 @@ To check actual source use, run `python3 evals/run.py codex live-sources adaptiv
 | `auto` | Full workflow with two optimization attempts and up to four measurement batches |
 | `quick`, `fallback`, `loop`, `resume` | Focused evidence, missing worker capability, a standalone optimization loop, and checkpoint reconciliation |
 
-Treat intended and realized treatment separately. Record actual worker launches, completed checks, budget exceedances, failures, and controls. Score each case check 0 for absent or wrong, 1 for partial, and 2 for substantiated. Compare recommendation, evidence accuracy, novelty, experimental validity and reproduction detail, alongside request duration, observed tool calls and provider tokens when available. Record costs per provider without treating different cache, quota or internal pricing semantics as equivalent. The bundle SHA is the entrypoint's hash. For a multi-file change preserve the bundle Git revision or archive in the experiment manifest.
+Treat intended and realized treatment separately. Record actual worker launches, completed checks, budget exceedances, failures, and controls. Score each case check 0 for absent or wrong, 1 for partial, and 2 for substantiated. Compare recommendation, evidence accuracy, novelty, experimental validity and reproduction detail, alongside request duration, observed tool calls and provider tokens when available. Record costs per provider without treating different cache, quota or internal pricing semantics as equivalent. The summary fingerprints every installed bundle file before launch and flags changes to the bundle, fixture files, and other files created in the workspace.
 
 For estimates of marginal benefit, use fresh sessions, the same model and task authorization, randomized or counterbalanced order, matched aggregate budgets, and multiple unpublished tasks. Blind reviewers to labels where possible. Scores on this public fixture set provide regression evidence.
 
@@ -49,7 +49,7 @@ python3 evals/compare.py claude case-a case-b --cases /private/cases.json \
   --out eval-output/comparison
 ```
 
-The runner uses one tool surface per case, a shared elapsed ceiling, and a maximum of two workers and two measurement batches. Treatment instructions restrict stages further. Claude Code can apply the same provider budget per arm. Stage counts in prompts are instructions. Check the native trace for actual behavior, provider usage and incomplete runs. Run comparisons serially on a shared benchmark machine.
+The runner uses one tool surface per case, a shared elapsed ceiling, and a maximum of two workers and two measurement batches. Worker arms request two first passes to keep the comparison meaningful even on easy cases. Real users still get adaptive routing. Claude Code can apply the same provider budget per arm. Check the native trace for actual stages, provider usage and incomplete runs. Run comparisons serially on a shared benchmark machine.
 
 Give a grader only the files under `grade/`. Score the case checks before opening `arm-key.json` or inspecting traces under `runs/`. Method details in the answers can give away the arm. For each arm, publish the decision, missed constraints, checks, realized tool use, time and cost together. Draw conclusions about the evaluated cases and disclose unfinished or contaminated runs.
 

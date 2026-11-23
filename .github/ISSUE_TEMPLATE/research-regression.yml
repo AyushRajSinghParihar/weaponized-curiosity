@@ -1,0 +1,28 @@
+name: Research run went wrong
+description: Share a prompt, what happened, and what would have helped.
+body:
+  - type: textarea
+    id: prompt
+    attributes:
+      label: What did you ask?
+      description: Share a short, sanitized prompt and any essential constraints.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What happened?
+      description: Include a short answer excerpt or the evidence it missed. Remove private data and credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would a better answer do?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Agent and version
+      placeholder: Codex or Claude Code version, skill tag or commit, and mode if set
