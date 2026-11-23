@@ -56,3 +56,17 @@ The [bounded improvement protocol](improvement-protocol.md) allowed two wording 
 On Claude I2, the search median was 98.9 ms versus 0.316 ms. End-to-end took 62.6 s, and the CLI reported 184,616 cached/input tokens plus 5,295 output tokens and estimated cost of $0.883. The initial Claude run took 71.5 s and reported 115,845 cached/input tokens plus 2,257 output at $0.319. The I2 run included observed workers, so the latency and cost difference cannot be attributed to the wording change alone. On Codex I2, matched search medians were 81.0 ms and 0.699 ms. Elapsed time was 100.4 s with 555,819 input and 3,333 output tokens. Both replays provide search-split evidence. Independent validation was not authorized inside the exhausted two-batch limit.
 
 Local tests verify metadata, reference routing, bundle placement, deterministic fixture facts and contracts, parsed event preservation, and local process timeout. Fixtures for injected provider events are mocks. The real fixture runs used native providers. Hidden adversarial holdouts, a real process death during an experiment, concurrent writers, broad live-search quality and budget-matched generalization remain unverified.
+
+## Public release replay
+
+The architecture pilot exposed a failure to test the 12-hour delivery requirement against a daily schedule. The release replay kept the original prompt and compared two successive instruction changes. A separate, synthetic [capacity case](../../evals/cases.json) checked a numerical unserved-work boundary. All runs used Quick mode, with no searches, experimental commands, or workers.
+
+| Run | Result | Elapsed |
+| --- | --- | ---: |
+| Architecture, original skill on Claude Code 2.1.330 | Treated daily batching with retries as sufficient for a 12-hour requirement. | 26.6 s |
+| Architecture, generic boundary check on Claude Code | Repeated the deadline error. A general instruction to check the hardest requirement did not change the decision. | 22.4 s |
+| Architecture, concrete boundary check on Claude Code | Traced eligibility just after the daily run, identified nearly 24 hours of waiting, and made the batch option conditional on a shorter cadence with time for retries. Actual processing and retry durations were unmeasured. | 32.4 s |
+| Capacity, generic boundary check on Codex CLI 0.171.0 | Identified the correct minimum of three workers and used burst arrivals. Reported the 694th as the nearest-rank p99 out of 700, yielding incorrect one- and three-worker times. | 15.5 s |
+| Capacity, concrete boundary check on Codex CLI | Used rank 693 and calculated 13.86 s, 6.94 s and 4.62 s for one, two and three workers. Three met the idealized bound. The result flagged unmeasured overhead without specifying a production test. | 15.8 s |
+
+The retained instruction asks the coordinator to use a concrete adverse input for each hard requirement, account for waiting across the entire path, and derive counts before rounding. These were single fresh runs per condition on known prompts. They verify the observed corrections on those cases.

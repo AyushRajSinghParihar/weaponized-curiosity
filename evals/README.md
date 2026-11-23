@@ -1,6 +1,6 @@
 # Evaluation suite
 
-[cases.json](cases.json) defines seven research tasks and a recovery exercise with concrete checks. Synthetic fixtures let you rerun conflicting-evidence and measurement cases when network access is unavailable. CLI tests use real hosted models and native tools. The authored inputs and measurements from those inputs have different evidence roles.
+[cases.json](cases.json) defines eight research tasks and a recovery exercise with concrete checks. Synthetic fixtures let you rerun conflicting-evidence and measurement cases when network access is unavailable. CLI tests use real hosted models and native tools. The authored inputs and measurements from those inputs have different evidence roles.
 
 ## Local checks
 

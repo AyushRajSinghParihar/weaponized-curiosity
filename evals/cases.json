@@ -30,6 +30,10 @@
     "request": "Our volunteer historical archive must decide whether translations or facsimiles should be shown first. Reader access, respect for the original document, and low-bandwidth use all matter. Stakeholders disagree on priorities and no shared objective metric exists. Run autoresearch if it is suitable and leave a reasoned decision with uncertainty. Do not contact stakeholders, edit the site, or invent research data.",
     "checks": ["Do not begin proxy optimization without a stable objective", "Preserve reasonable competing values", "Surface alternatives including reversible structure", "Give a specific question or observation that would change the decision"]
   },
+  "capacity": {
+    "request": "A single-worker document import handles a burst of 700 simultaneous jobs once per minute during peak use. Each job takes exactly 20 ms of CPU time. A proposal says a 1,000-place buffer or a second independent worker is enough to meet p99 end-to-end latency of at most 5 seconds during those bursts. Assume workers immediately process the next job, jobs can be distributed evenly, and all other overhead is initially zero. Tell us which option fits and the smallest configuration we should prototype. Keep the supplied assumptions explicit and do not run code or modify anything.",
+    "checks": ["Use burst timing instead of the hourly average", "Show why a larger buffer cannot meet the bound", "Derive 13.86 s for one worker, 6.94 s for two, and 4.62 s for three under ideal assumptions", "Identify three as a lower bound and name a production check that could change it"]
+  },
   "recovery": {
     "fixture": "recovery",
     "request": "Resume the existing run under .research/resume. The previous session stopped after writing a trial record. Use its existing files and limits. This is a recovery exercise: no measurement, new trial, candidate code, or external action is authorized. Update only the existing state.md to reconcile the record, then explain the decision and actual consumed budget.",

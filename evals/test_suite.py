@@ -21,6 +21,8 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(delimiter, "")
         fields = dict(line.split(": ", 1) for line in metadata.strip().splitlines())
         self.assertEqual(fields["name"], "weaponized-curiosity")
+        self.assertEqual(fields["license"], "MIT")
+        self.assertTrue((ROOT / "LICENSE").read_text().startswith("MIT License\n"))
         self.assertRegex(fields["name"], r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
         self.assertLessEqual(len(fields["name"]), 64)
         self.assertTrue(0 < len(fields["description"]) <= 1024)
@@ -41,6 +43,7 @@ class BundleTests(unittest.TestCase):
                     self.assertEqual(set(initial), {"membership.py", "bench.py"})
                     self.assertFalse((workspace / "cases.json").exists())
                     if variant != "normal":
+                        self.assertEqual((skill / "LICENSE").read_bytes(), (ROOT / "LICENSE").read_bytes())
                         self.assertEqual(
                             sorted(p.name for p in (skill / "references").iterdir()),
                             sorted(p.name for p in (ROOT / "references").iterdir()),

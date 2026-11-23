@@ -44,6 +44,9 @@ def prepare(workspace, args):
     skill_dir = workspace / discovery / "skills" / "weaponized-curiosity"
     skill_dir.mkdir(parents=True)
     shutil.copy2(args.bundle / "SKILL.md", skill_dir)
+    license_file = args.bundle / "LICENSE"
+    if license_file.is_file():
+        shutil.copy2(license_file, skill_dir)
     shutil.copytree(args.bundle / "references", skill_dir / "references")
     return fixture_hashes
 
