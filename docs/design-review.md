@@ -1,0 +1,16 @@
+# Adversarial design review
+
+Four read-only reviewers received fresh contexts and distinct questions. The fourth started in a later scheduling wave. The reviewers received the design and relevant artifacts, without earlier peer feedback. Findings below describe changes to make before implementing the skill.
+
+| Challenge | Decision and acceptance evidence |
+| --- | --- |
+| A fresh transcript can still expose earlier memos through the workspace. | Keep initial memos coordinator-only until the barrier closes. Distinguish transcript, file-access and model independence. Record the limits. Test waves through actual spawn traces when possible. |
+| Plenty of votes can conceal a shared source, sample selection or correlated model error. | Require a closure record for each pivotal claim, including evidence family and scope, strongest contrary evidence or attempted retrieval, and what it would change. Preserve disagreements on budget exhaustion. |
+| An intervention that moves two variables can improve the metric while leaving the mechanism undecided. | Freeze the outcome-to-hypothesis mapping with identifying assumptions and allow a valid, non-discriminating result. Report the effect and the causal interpretation independently. |
+| Searching noisy metrics promotes lucky candidates. Readable or repeatedly queried holdouts leak. | Budget for fresh validation before tuning. Use a frozen scoring rule and guards. Promote a tuning leader provisionally, then validate the frozen candidate outside its scope when available. Report lack of isolation or inconclusive measurement and keep the previous verified recommendation. |
+| A wait timeout can leave a worker live. An interruption can charge or promote a candidate twice. | Reserve and persist aggregate budget before dispatch. Require enforceable hard bounds, verify termination, and never release unresolved reservations. Require one active writer, stabilize attempt IDs, write complete results first and update one authoritative state record last. |
+| An unattended run may confuse what a tool can do with what the user authorized. | Freeze the action envelope for experiments, storage, external calls and spend. Recheck at each side effect and resume. A missing capability blocks its dependent stage. |
+| Setup can cost more than a short question warrants. | Use only the brief, decisive source or evidence, and a compact answer for Quick. Defer capabilities and durable artifacts until their dependent work is chosen. |
+| A compressed eval pass can conflate resource differences, ambient config and stage availability. | Measure per-case quality and cost using fixed fixtures and fresh sessions. Verify native traces and exact versions where possible. Publish gaps precisely and use blinded, budget-matched comparisons for causal claims. |
+
+The core stays host-native and instruction-based. There is no cross-provider scheduler, sandbox or lock service. If the host cannot enforce a required limit or isolate editable candidates from sensitive resources, the experiment cannot claim that guarantee. The benchmark suite can exercise selected paths, while native failure injection and general quality claims require separate, stronger evidence.
