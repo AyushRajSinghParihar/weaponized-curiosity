@@ -26,6 +26,7 @@ Each run starts a fresh temporary Git workspace. The `normal` condition installs
 | Variant | Intended treatment |
 | --- | --- |
 | `normal` | Ordinary agent, with the fixture's original permissions |
+| `adaptive` | Invoke in natural language without selecting a mode |
 | `solo` | Deep and zero agents, debate or experiments |
 | `debate` | Deep with four requested workers, bounded critique and zero experiment batches |
 | `full` | Deep, workers and critique, and two experiment batches |
@@ -35,6 +36,20 @@ Each run starts a fresh temporary Git workspace. The `normal` condition installs
 Treat intended and realized treatment separately. Record actual worker launches, completed checks, budget exceedances, failures, and controls. Score each case check 0 for absent or wrong, 1 for partial, and 2 for substantiated. Compare recommendation, evidence accuracy, novelty, experimental validity and reproduction detail, alongside request duration, observed tool calls and provider tokens when available. Record costs per provider without treating different cache, quota or internal pricing semantics as equivalent. The bundle SHA is the entrypoint's hash. For a multi-file change preserve the bundle Git revision or archive in the experiment manifest.
 
 For estimates of marginal benefit, use fresh sessions, the same model and task authorization, randomized or counterbalanced order, matched aggregate budgets, and multiple unpublished tasks. Blind reviewers to labels where possible. Scores on this public fixture set provide regression evidence.
+
+### Matched comparisons
+
+Keep a private case file with the same shape as [cases.json](cases.json). Put optional fixtures in a sibling `fixtures/` directory. Each case can declare `tool_profile` as `read-only` (default for new cases), `benchmark` (fixture writes and `python3 bench.py`), or `recovery` (fixture writes). Treat case files and their executable fixtures as trusted. Only the selected request and fixture go into the agent run. Keep grading checks outside the fixture.
+
+```sh
+python3 evals/compare.py claude case-a case-b --cases /private/cases.json \
+  --model YOUR_MODEL --seed 41 --timeout 90 --max-budget-usd 0.40 \
+  --out eval-output/comparison
+```
+
+The runner uses one tool surface per case, a shared elapsed ceiling, and a maximum of two workers and two measurement batches. Treatment instructions restrict stages further. Claude Code can apply the same provider budget per arm. Stage counts in prompts are instructions. Check the native trace for actual behavior, provider usage and incomplete runs. Run comparisons serially on a shared benchmark machine.
+
+Give a grader only the files under `grade/`. Score the case checks before opening `arm-key.json` or inspecting traces under `runs/`. Method details in the answers can give away the arm. For each arm, publish the decision, missed constraints, checks, realized tool use, time and cost together. Draw conclusions about the evaluated cases and disclose unfinished or contaminated runs.
 
 ## Algorithm measurements
 

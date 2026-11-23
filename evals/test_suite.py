@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 
+import compare
 import run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,7 +37,10 @@ class BundleTests(unittest.TestCase):
             for variant in ["quick", "normal"]:
                 with self.subTest(host=host, variant=variant), tempfile.TemporaryDirectory() as scratch:
                     workspace = Path(scratch)
-                    args = argparse.Namespace(backend=host, case="algorithm", variant=variant, bundle=ROOT)
+                    args = argparse.Namespace(
+                        backend=host, case="algorithm", variant=variant, bundle=ROOT,
+                        cases=run.DEFAULT_CASES, case_spec=run.CASES["algorithm"],
+                    )
                     initial = run.prepare(workspace, args)
                     skill = workspace / folder / "skills" / "weaponized-curiosity"
                     self.assertEqual((skill / "SKILL.md").exists(), variant != "normal")
@@ -51,6 +55,43 @@ class BundleTests(unittest.TestCase):
 
 
 class RunnerTests(unittest.TestCase):
+    def test_grading_packet_excludes_assignments_and_tool_traces(self):
+        assignments = compare.schedule(["private"], seed=7)
+        self.assertEqual({arm for _, _, arm in assignments}, set(run.COMPARISON_ARMS))
+        self.assertEqual(assignments, compare.schedule(["private"], seed=7))
+        with tempfile.TemporaryDirectory() as scratch:
+            output = Path(scratch)
+            packet = output / "grade"
+            packet.mkdir()
+            answer_id, _, arm = assignments[0]
+            run_dir = output / answer_id
+            run_dir.mkdir()
+            (run_dir / "summary.json").write_text(json.dumps({
+                "answer": "Use the incumbent.", "variant": arm, "tools": ["private trace"],
+            }))
+            compare.prepare_grading_packet(
+                packet, {"private": {"request": "Task", "checks": ["Rubric"]}}, output, assignments,
+            )
+            self.assertEqual((packet / f"{answer_id}.md").read_text(), "Case: private\n\nUse the incumbent.\n")
+            self.assertIn("Rubric", (packet / "cases.json").read_text())
+            self.assertEqual(len(list(packet.iterdir())), 5)
+
+    def test_matched_arms_share_tool_surface_and_hide_rubric(self):
+        for host in ("codex", "claude"):
+            commands = []
+            for variant in run.COMPARISON_ARMS:
+                args = argparse.Namespace(
+                    backend=host, case="private", variant=variant, timeout=75,
+                    matched=True, model="fixed", max_budget_usd=None,
+                    case_spec={"request": "Trusted task", "checks": ["private grading key"], "tool_profile": "benchmark"},
+                )
+                prompt = run.invocation(args)
+                self.assertIn("Trusted task", prompt)
+                self.assertIn("75 seconds", prompt)
+                self.assertNotIn("private grading key", prompt)
+                commands.append(run.command_line(args))
+            self.assertTrue(all(command == commands[0] for command in commands))
+
     def test_timeout_preserves_trace_and_does_not_hang(self):
         with tempfile.TemporaryDirectory() as scratch:
             workspace = Path(scratch)

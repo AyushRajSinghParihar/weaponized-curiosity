@@ -11,9 +11,11 @@ import tempfile
 import time
 
 EVALS = Path(__file__).resolve().parent
-CASES = json.loads((EVALS / "cases.json").read_text())
+DEFAULT_CASES = EVALS / "cases.json"
+CASES = json.loads(DEFAULT_CASES.read_text())
 VARIANTS = {
     "normal": "",
+    "adaptive": "",
     "quick": "mode=quick subagents=0 experiments=0",
     "solo": "mode=deep subagents=0 debate_rounds=0 experiments=0",
     "debate": "mode=deep subagents=4 debate_rounds=1 experiments=0",
@@ -23,15 +25,27 @@ VARIANTS = {
     "loop": "mode=autoresearch subagents=0 experiments=4 iterations=2",
     "resume": "mode=autoresearch",
 }
+COMPARISON_ARMS = {
+    "normal": "",
+    "solo": "mode=deep subagents=0 debate_rounds=0 experiments=0",
+    "debate": "mode=deep subagents=2 debate_rounds=1 experiments=0",
+    "full": "mode=deep subagents=2 debate_rounds=1 experiments=2 iterations=0",
+}
+
+
+def tool_profile(args):
+    if args.case_spec.get("tool_profile"):
+        return args.case_spec["tool_profile"]
+    return {"algorithm": "benchmark", "recovery": "recovery"}.get(args.case, "read-only")
 
 
 def prepare(workspace, args):
     subprocess.run(["git", "init", "-q", str(workspace)], check=True)
-    fixture = CASES[args.case].get("fixture")
+    fixture = args.case_spec.get("fixture")
     fixture_hashes = {}
     if fixture:
         shutil.copytree(
-            EVALS / "fixtures" / fixture, workspace, dirs_exist_ok=True,
+            args.cases.parent / "fixtures" / fixture, workspace, dirs_exist_ok=True,
             ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
         )
         for path in workspace.rglob("*"):
@@ -52,21 +66,34 @@ def prepare(workspace, args):
 
 
 def invocation(args):
-    request = CASES[args.case]["request"]
+    request = args.case_spec["request"]
     if args.variant != "normal":
         prefix = "$" if args.backend == "codex" else "/"
+        settings = COMPARISON_ARMS if args.matched else VARIANTS
+        options = f" {settings[args.variant]}" if settings[args.variant] else ""
         request = (
-            f"{prefix}weaponized-curiosity {VARIANTS[args.variant]} "
+            f"{prefix}weaponized-curiosity{options} "
             f"searches=0 minutes={args.timeout / 60:.2f} (elapsed target).\n\n{request}"
         )
-        if args.case not in {"algorithm", "recovery"}:
+        if tool_profile(args) == "read-only":
             request += "\nKeep any research records in the final answer for this test."
+    if args.matched:
+        request += (
+            f"\nThe shared ceilings are {args.timeout} seconds, zero web searches, "
+            "up to two native workers and two allowed measurement batches. "
+            "Use only stages admitted by your task and any narrower limits. "
+            "Keep the answer focused on the decision, evidence, caveats, and actual work. "
+            "Omit the evaluation condition name, skill name, and mode label."
+        )
+        if args.variant == "normal":
+            request += " Work solo. Use permitted measurements when they would change the answer."
     return request
 
 
 def command_line(args):
+    profile = tool_profile(args)
     if args.backend == "codex":
-        writable = args.case in {"algorithm", "recovery"}
+        writable = profile != "read-only"
         sandbox = "workspace-write" if writable else "read-only"
         command = [
             "codex", "-a", "never", "exec", "--ignore-user-config",
@@ -80,9 +107,9 @@ def command_line(args):
         return command + ["-"]
 
     allowed = ["Read", "Glob", "Grep", "Skill"]
-    if args.case in {"algorithm", "recovery"}:
+    if profile != "read-only":
         allowed.extend(["Write", "Edit"])
-    if args.variant in {"debate", "full", "auto"}:
+    if args.matched or args.variant in {"adaptive", "debate", "full", "auto"}:
         allowed.append("Agent")
     command = [
         "claude", "-p", "--setting-sources", "project", "--strict-mcp-config",
@@ -91,13 +118,15 @@ def command_line(args):
         "--output-format", "stream-json", "--verbose",
         "--permission-mode", "dontAsk",
     ]
-    if args.case == "algorithm":
+    if profile == "benchmark":
         command[command.index("--tools") + 1] += ",Bash"
         command.extend([
             "--allowedTools", "Read,Glob,Grep,Skill,Edit,Write,Bash(python3 bench.py *)",
         ])
     if args.model:
         command.extend(["--model", args.model])
+    if args.max_budget_usd is not None:
+        command.extend(["--max-budget-usd", str(args.max_budget_usd)])
     return command + ["--"]
 
 
@@ -191,15 +220,28 @@ def copy_artifacts(workspace, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("backend", choices=("codex", "claude"))
-    parser.add_argument("case", choices=CASES)
+    parser.add_argument("case", help=f"Case ID (defaults include {', '.join(CASES)})")
     parser.add_argument("variant", choices=VARIANTS)
     parser.add_argument("--timeout", type=int, default=150)
     parser.add_argument("--model")
     parser.add_argument("--bundle", type=Path, default=EVALS.parent)
+    parser.add_argument("--cases", type=Path, default=DEFAULT_CASES, help="Trusted case JSON")
+    parser.add_argument("--matched", action="store_true", help="Use the four-arm comparison protocol")
+    parser.add_argument("--max-budget-usd", type=float, help="Claude Code request budget")
     parser.add_argument("--out", type=Path, required=True, help="A new output directory")
     args = parser.parse_args()
     if not 10 <= args.timeout <= 900:
         parser.error("--timeout must be between 10 and 900 seconds")
+    if args.matched and args.variant not in COMPARISON_ARMS:
+        parser.error("--matched requires normal, solo, debate or full")
+    if args.max_budget_usd is not None and not (args.backend == "claude" and 0 < args.max_budget_usd < float("inf")):
+        parser.error("--max-budget-usd requires Claude Code and a finite positive amount")
+    cases = json.loads(args.cases.read_text())
+    if args.case not in cases:
+        parser.error(f"unknown case {args.case!r}")
+    args.case_spec = cases[args.case]
+    if tool_profile(args) not in {"read-only", "benchmark", "recovery"}:
+        parser.error("invalid tool profile")
 
     version = subprocess.check_output([args.backend, "--version"], text=True).strip()
     output = args.out.resolve()
@@ -214,6 +256,7 @@ def main():
         result.update({
             "backend": args.backend, "version": version, "case": args.case, "variant": args.variant,
             "elapsed_seconds": elapsed, "returncode": returncode, "timed_out": timeout,
+            "matched": args.matched, "timeout_seconds": args.timeout, "max_budget_usd": args.max_budget_usd,
             "model_override": args.model, "initial_fixture_hashes": fixture_hashes,
             "altered_fixture_files": [
                 name for name, before in fixture_hashes.items()
