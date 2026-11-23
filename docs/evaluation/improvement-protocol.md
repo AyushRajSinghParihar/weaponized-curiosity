@@ -17,3 +17,9 @@ Prediction: with the count explicitly configured, a fresh Deep run launches four
 ## Guardrails and stop
 
 Keep Quick proportional. Preserve the no-objective/no-shell fallback and the baseline/evaluator constraints. Do not tune the benchmark cases to force a favorable response. Stop when two revisions are attempted, an independent check contradicts a change, the next evaluation would exceed the bounded pilot, or host quota blocks it.
+
+## Trial I2 amendment before replay
+
+Trial I1 recorded two successful measurement batches and skipped validation, but attempted a denied compound benchmark command and an out-of-envelope extra correctness command. It missed the stronger dispatch criterion. The Codex full run also took `iterations=0` to prohibit the first controlled candidate test, although the experiment budget allowed it. A four-worker session test subsequently confirmed native dispatch and critique on the conflict fixture, so worker-target wording is lower value for this iteration.
+
+Replace the experiment instruction with an explicit measurement schedule and separate evaluator invocations from reads and edits. Distinguish the experimental budget from the optional loop count. Replay the same Claude Code condition. Require at most two benchmark dispatches, two successful measurements, and truthful reporting without implying an unused validation allowance. Use a Codex full replay to check that baseline and first candidate are permitted with `iterations=0`, and the existing read-only fallback as an unchanged-path control. No more instruction revisions in this pilot.
