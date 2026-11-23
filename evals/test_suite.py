@@ -5,12 +5,14 @@ import importlib.util
 import json
 from pathlib import Path
 import re
+import signal
 import sys
 import tempfile
 import unittest
 
 import compare
 import guarded_membership
+import recovery_replay
 import run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -153,6 +155,19 @@ class RunnerTests(unittest.TestCase):
 
 
 class FixtureTests(unittest.TestCase):
+    def test_real_interruption_preserves_only_published_trial_results(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            output = Path(scratch) / "cases"
+            recovery_replay.prepare(output)
+            for stage in recovery_replay.STAGES:
+                run_dir = output / "fixtures" / stage / recovery_replay.RUN
+                self.assertIn("One launch of T02", (run_dir / "started.md").read_text())
+                self.assertIn(
+                    f"return code {-signal.SIGKILL}", (run_dir / "process.md").read_text(),
+                )
+                self.assertEqual((run_dir / "trials" / "T02.md").exists(), stage == "recorded")
+                self.assertIn("Active attempt: T02", (run_dir / "state.md").read_text())
+
     def test_guarded_membership_detects_memory_regression_despite_exact_outputs(self):
         wide, small = guarded_membership.workload(41)
         candidates = ROOT / "evals" / "fixtures" / "guarded-candidates"
