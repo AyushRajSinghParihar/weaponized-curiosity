@@ -147,8 +147,9 @@ class RunnerTests(unittest.TestCase):
                     {"type": "tool_use", "name": "Task", "input": {"description": "Read independently"}},
                 ]}},
                 {"type": "system", "subtype": "task_notification", "status": "completed"},
-                {"type": "result", "result": "Example verdict", "usage": {"input_tokens": 41}},
-                {"type": "result", "result": "Late reviewer note", "usage": {"input_tokens": 9}},
+                {"type": "result", "subtype": "success", "result": "Example verdict", "usage": {"input_tokens": 41}},
+                {"type": "result", "subtype": "success", "result": "Late reviewer note", "usage": {"input_tokens": 9}},
+                {"type": "result", "subtype": "error_max_budget_usd", "total_cost_usd": 0.69},
             ],
         }
         with tempfile.TemporaryDirectory() as scratch:
@@ -165,6 +166,9 @@ class RunnerTests(unittest.TestCase):
                     if host == "claude":
                         self.assertEqual(result["result_segments"][1]["result"], "Late reviewer note")
                         self.assertEqual(result["native_task_events"][0]["status"], "completed")
+                        self.assertEqual(result["provider_subtype"], "success")
+                        self.assertEqual(result["provider_terminal_subtype"], "error_max_budget_usd")
+                        self.assertEqual(result["provider_cost_usd"], 0.69)
 
     def test_live_web_remains_read_only_and_records_search_actions(self):
         args = argparse.Namespace(

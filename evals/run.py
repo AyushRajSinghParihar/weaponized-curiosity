@@ -235,6 +235,7 @@ def summarize(trace, backend):
                     result["usage"] = event.get("usage")
                     result["answer"] = event.get("result")
                     result["provider_subtype"] = subtype
+                result["provider_terminal_subtype"] = subtype
                 result["provider_cost_usd"] = event.get("total_cost_usd")
     return result
 

@@ -46,15 +46,15 @@ batches. Save one batch for validation and include the raw timings.
 
 ## What comes back
 
-For a quick question, expect an answer and the evidence behind it. For a close call, ask what would make the recommendation flip and the cheapest way to find out. Longer runs can save sources, hypotheses, trial results, and a checkpoint under `.research/<run-id>/`. Give the agent that path when you want to pick up where it left off.
+For a quick question, expect an answer and the evidence behind it. For a close call, the agent should tell you what would make the recommendation flip and the cheapest way to find out. Longer runs can save sources, hypotheses, trial results, and a checkpoint under `.research/<run-id>/`. Give the agent that path when you want to pick up where it left off.
 
 The skill uses the tools and permissions your agent already has. If a tool is missing, the report says what the agent could check and where the evidence stops. [Example sessions](docs/examples.md) · [Skill instructions](SKILL.md)
 
 ## What we’ve tested
 
-On the included membership benchmark, the optimization run took median search time from **100.462 ms to 0.732 ms** and passed the separate validation split. A regular Codex run also found a correct set-based solution. The validation cases were visible to the agent. [Raw timings](docs/evaluation/membership-auto.json)
+In a guarded optimization run, indexing all values was about **41× faster** on fresh inputs and failed the memory cap. The frozen candidate indexed just the probes, used about **10 KiB** of temporary Python allocation, and passed the same checks. [Example and raw measurements](docs/examples.md#reject-a-speed-win-on-a-memory-limit)
 
-Codex and Claude Code were also tested on architecture decisions, conflicting sources, product ideas, and checkpoint recovery. A replay caught a daily batch that could leave a job waiting almost 24 hours despite a 12-hour deadline. The evaluation report includes mistakes, costs, and which stages actually ran. [Evaluation results](docs/evaluation/results.md)
+Codex and Claude Code were also tested on architecture decisions, conflicting sources, product ideas, and checkpoint recovery. The evaluation reports include the mistakes, costs, and stages that actually ran. [Latest evaluation](docs/evaluation/adaptive-update.md) · [Original pilot](docs/evaluation/results.md)
 
 ## Dig in
 

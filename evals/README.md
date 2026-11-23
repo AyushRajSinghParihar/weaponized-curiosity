@@ -1,6 +1,6 @@
 # Evaluation suite
 
-[cases.json](cases.json) defines eight research tasks and a recovery exercise with concrete checks. Synthetic fixtures let you rerun conflicting-evidence and measurement cases when network access is unavailable. CLI tests use real hosted models and native tools. The authored inputs and measurements from those inputs have different evidence roles.
+[cases.json](cases.json) defines research and recovery exercises with concrete checks. Synthetic fixtures let you rerun conflicting-evidence and measurement cases when network access is unavailable. CLI tests use real hosted models and native tools. The authored inputs and measurements from those inputs have different evidence roles.
 
 ## Local checks
 
@@ -49,7 +49,7 @@ python3 evals/compare.py claude case-a case-b --cases /private/cases.json \
   --out eval-output/comparison
 ```
 
-The runner uses one tool surface per case, a shared elapsed ceiling, and a maximum of two workers and two measurement batches. Worker arms request two first passes to keep the comparison meaningful even on easy cases. Real users still get adaptive routing. Claude Code can apply the same provider budget per arm. Check the native trace for actual stages, provider usage and incomplete runs. Run comparisons serially on a shared benchmark machine.
+The runner uses one tool surface per case, a shared elapsed ceiling, and a maximum of two workers and two measurement batches. Worker arms request two first passes to keep the comparison meaningful even on easy cases. Real users still get adaptive routing. Claude Code can apply the same provider budget per arm. Compare the terminal status and actual cost against that budget. A replay reported $0.69 with a $0.65 setting before terminating with a budget error. Check the native trace for actual stages and incomplete runs. Run comparisons serially on a shared benchmark machine.
 
 Give a grader only the files under `grade/`. Score the case checks before opening `arm-key.json` or inspecting traces under `runs/`. Method details in the answers can give away the arm. For each arm, publish the decision, missed constraints, checks, realized tool use, time and cost together. Draw conclusions about the evaluated cases and disclose unfinished or contaminated runs.
 
@@ -63,3 +63,30 @@ python3 bench.py --split validation --repeat 9
 ```
 
 Use the same interpreter and machine conditions for comparisons, and report the raw timings and their variability. Speedups from the recorded fixture need not transfer to other workloads or hosts.
+
+### Guarded optimization
+
+Run the search in a fresh candidate workspace, then review and freeze the candidate. Only the public search fixture is copied into the candidate workspace. Run the final evaluator separately after the search session exits.
+
+```sh
+python3 evals/run.py codex guarded-membership loop --out eval-output/guarded
+python3 evals/guarded_membership.py \
+  evals/fixtures/guarded-candidates/value_index.py \
+  evals/fixtures/guarded-candidates/query_index.py \
+  eval-output/guarded/membership.py
+```
+
+The evaluator generates input from a fresh seed and records hashes and raw samples. It tests exact outputs and unchanged inputs, at least 25% lower wide-workload median, at most 64 KiB additional traced Python allocation, and a small-workload batch p95 guard. It alternates timings with the baseline. Timing samples average each batch's calls. Run only reviewed Python candidates because this local evaluator executes them directly. To replay the published samples' input, pass the recorded seed and the [archived candidate](fixtures/guarded-candidates/missing_queries.py). For a new independent check, use a fresh seed.
+
+### Interrupt and recover
+
+```sh
+python3 evals/recovery_replay.py prepare eval-output/crashes
+for stage in running recorded; do
+  python3 evals/run.py codex "$stage" resume \
+    --cases eval-output/crashes/cases.json --out "eval-output/resumed-$stage"
+  python3 evals/recovery_replay.py verify eval-output/crashes "eval-output/resumed-$stage" "$stage"
+done
+```
+
+The controller kills a real local trial process during measurement and after its result is written in two separate fixtures. Each CLI session gets a copy of one fixture. The checker compares the resulting checkpoint, the preserved artifacts and the observed write set. Review the trace for new trial dispatches.

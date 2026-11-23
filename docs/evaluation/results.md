@@ -1,5 +1,7 @@
 # Evaluation results
 
+See the [adaptive update](adaptive-update.md) for matched comparisons, live-source auditing, guarded optimization and process interruption replays.
+
 Pilot run on 2026-11-24. The [cases and checks](../../evals/cases.json) cover seven research domains and a recovery scenario. The applications and tool invocations were real. Tasks and source fixtures were synthetic. A single developer reviewed answers and execution events against the listed checks, with no blinding or repeated random samples. Comparisons show what happened in these attempts and do not estimate average or causal improvements.
 
 ## Platform coverage
