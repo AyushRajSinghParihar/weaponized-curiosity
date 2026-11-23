@@ -6,7 +6,7 @@ Use Weaponized Curiosity when you want your agent to research a question, compar
 
 > Use Weaponized Curiosity to research whether we should keep our Postgres job queue or move to a dedicated broker. Use our current workload and tell me what would make switching worthwhile.
 
-That’s a complete prompt. The skill picks **Quick** for a focused question and **Deep** when a decision needs more digging. Add a mode or budget when you have one in mind.
+That’s a complete prompt. The skill starts with the evidence most likely to change the answer. It can dig deeper if it finds a consequential gap. Add a mode or budget when you have one in mind.
 
 ## Install
 
@@ -22,7 +22,7 @@ You can ask for the skill by name or invoke it with `$weaponized-curiosity` in C
 
 If you want to be able to say “research this,” put a line like this in your project instructions. Use `AGENTS.md` for Codex or `CLAUDE.md` for Claude Code.
 
-> When I ask you to research something or compare options using evidence, use `weaponized-curiosity`. Choose the lightest mode that can answer the question.
+> When I ask you to research something or compare options using evidence, use `weaponized-curiosity`.
 
 ## When to pick a mode
 

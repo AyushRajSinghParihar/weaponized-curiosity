@@ -1,6 +1,14 @@
 # Run setup, limits, and recovery
 
-Use this reference for Deep, Extreme, Autoresearch, resumable work, or explicit budgets. Quick may keep its brief and evidence inline.
+Use this reference for escalation, Deep, Extreme, Autoresearch, resumable work, or explicit budgets. Quick may keep its brief and evidence inline.
+
+## Adaptive routing
+
+When the user supplies no mode, start with Quick ceilings and a check of the claim most likely to flip the answer. A supplied fact, calculation, direct reading, or focused search can be enough. Keep a tally from the first action. If a hard requirement already fails or the pivotal evidence settles the decision, stop with a compact answer.
+
+Escalate when a named gap could change the decision and a permitted next step can close it. Keep the work solo for a missing source or straightforward calculation. Assign one fresh specialist to a material contradiction or difficult independent check. Assign more only to distinct questions with credible value, up to the effective worker ceiling. Use a small controlled test when competing answers predict different outcomes and the test fits the scope. Check feasibility before promising any of these steps.
+
+When escalating to Deep, replace Quick defaults with the applicable Deep ceilings and count everything already spent. Explicit user limits, including zeroes and time measured from the start, stay in force. Record why the upgrade pays off and which work it admits. An upgrade supplies no new permission. Use Extreme when explicitly requested or when the user has authorized the extra resources and there are several important gaps. Use iterative optimization only when requested or enabled and its entry conditions hold.
 
 ## Set the envelope
 
