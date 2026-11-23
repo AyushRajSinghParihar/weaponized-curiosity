@@ -1,0 +1,94 @@
+{
+  "case": "algorithm",
+  "host": "codex-cli 0.171.0",
+  "runtime": "Python 3.14.2, Darwin arm64",
+  "skill_commit": "656dcc1",
+  "baseline_sha256": "c7f511e88167b5d2219908d91cc839d1d6dd030730fe39779de39db94e25883a",
+  "evaluator_sha256": "e52301a63f8d46453120715825d3a58f20ee661e88431744ba858fac99987199",
+  "retained_candidate_sha256": "fc39bd974bdcdd87a3b3298316dd58c9dc79b0a968c20c2e90e9523edb341ef5",
+  "iteration_cap": 2,
+  "experiment_cap": 4,
+  "validation_median_gate_seconds": 0.08037,
+  "measurements": [
+    {
+      "trial": "01-baseline-search",
+      "decision": "baseline",
+      "split": "search",
+      "cases": 6,
+      "repeat": 9,
+      "seconds": [
+        0.09565654105972499,
+        0.10817054193466902,
+        0.1028102079872042,
+        0.132501499960199,
+        0.09986833296716213,
+        0.09897950000595301,
+        0.1006569160381332,
+        0.1004616660065949,
+        0.09584795800037682
+      ],
+      "median_seconds": 0.1004616660065949,
+      "correct": true
+    },
+    {
+      "trial": "02-set-search",
+      "decision": "provisional incumbent",
+      "split": "search",
+      "cases": 6,
+      "repeat": 9,
+      "seconds": [
+        0.0007819170132279396,
+        0.0007162090623751283,
+        0.000691042048856616,
+        0.0006591669516637921,
+        0.0009220420615747571,
+        0.0007318340940400958,
+        0.000659500015899539,
+        0.001071666949428618,
+        0.0007755410624668002
+      ],
+      "median_seconds": 0.0007318340940400958,
+      "correct": true
+    },
+    {
+      "trial": "03-sorted-search",
+      "decision": "reject, slower than incumbent",
+      "split": "search",
+      "cases": 6,
+      "repeat": 9,
+      "seconds": [
+        0.0023586669703945518,
+        0.0022393749095499516,
+        0.002246374962851405,
+        0.002211041981354356,
+        0.00214412494096905,
+        0.0021850409684702754,
+        0.0021409590262919664,
+        0.00211687502451241,
+        0.0020910409511998296
+      ],
+      "median_seconds": 0.0021850409684702754,
+      "correct": true
+    },
+    {
+      "trial": "04-set-validation",
+      "decision": "retain, passed frozen gate on visible out-of-sample cases",
+      "split": "validation",
+      "cases": 9,
+      "repeat": 9,
+      "seconds": [
+        0.0013103329110890627,
+        0.0012700000079348683,
+        0.0012372089549899101,
+        0.0012296669883653522,
+        0.0012356670340523124,
+        0.0011930828914046288,
+        0.0011840839870274067,
+        0.0011768749682232738,
+        0.0011755829909816384
+      ],
+      "median_seconds": 0.0012296669883653522,
+      "correct": true
+    }
+  ]
+}
