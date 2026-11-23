@@ -10,4 +10,8 @@ Start with the recommendation, conditions under which it holds, and the outcome 
 
 For a quick decision, fold the evidence, uncertainty, and stopping rationale into a few sentences. Retain the full records in durable artifacts when required for audit or resumption.
 
+## When the decision changes
+
+For a close comparison, give the current choice, the assumption carrying it, the condition that favors the best alternative, and the cheapest credible way to check. Derive a numerical threshold only from known constraints and inputs. If priorities or inputs are missing, give a conditional threshold in words and say what would resolve it. For a settled choice, leave this compact.
+
 For example, an event becoming eligible just after a daily batch can wait almost 24 hours before processing. A provider replay window of 24 hours protects some retries. It does not establish a 12-hour delivery deadline. Verify each deadline against its own start and end points.

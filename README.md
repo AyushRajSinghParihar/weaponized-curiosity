@@ -46,7 +46,7 @@ batches. Save one batch for validation and include the raw timings.
 
 ## What comes back
 
-For a quick question, expect an answer, the evidence behind it, and what would change the recommendation. Longer runs can save sources, hypotheses, trial results, and a checkpoint under `.research/<run-id>/`. Give the agent that path when you want to pick up where it left off.
+For a quick question, expect an answer and the evidence behind it. For a close call, ask what would make the recommendation flip and the cheapest way to find out. Longer runs can save sources, hypotheses, trial results, and a checkpoint under `.research/<run-id>/`. Give the agent that path when you want to pick up where it left off.
 
 The skill uses the tools and permissions your agent already has. If a tool is missing, the report says what the agent could check and where the evidence stops. [Example sessions](docs/examples.md) · [Skill instructions](SKILL.md)
 

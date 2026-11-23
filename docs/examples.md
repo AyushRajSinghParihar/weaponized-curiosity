@@ -50,3 +50,9 @@ The [PDF batching fixture](../evals/fixtures/conflicts/notes.md) is fictional. T
 The current decision is to leave batching off for cold jobs on the four-worker laptop. Different documents, unmeasured variation, run ordering and uncontrolled disk cache weaken the size and causal interpretation of the 40 ms median penalty. One independent reviewer suggested warm, same-document routing based on a transferable cache-reuse mechanism. The challenge narrowed that idea to a separate test on the target laptop and required end-to-end savings after routing overhead.
 
 The smallest decision-changing test uses representative PDFs in both modes, matched cold conditions, randomized or counterbalanced order, and output equivalence and memory gates. Total wall time can decide the default. To distinguish setup overhead from parsing savings, capture phase timings in the same runs. No empirical result is available for either follow-up.
+
+## Find the point at which you would switch
+
+> Use Weaponized Curiosity to research whether to switch from serial to overlapping reloads. The process peaks at 5.2 GiB before reload. The machine has 8 GiB and needs 1.5 GiB free. Each generation can add 1.0 GiB while loading.
+
+In this illustrative example, keep serial reloads. One load brings modeled usage to 6.2 GiB, below the 6.5 GiB ceiling. Two overlapping loads could bring it to 7.2 GiB. Reconsider overlap if the combined load stays at or below 1.3 GiB at the 5.2 GiB resident peak. The smallest useful check is a production-sized reload in staging with both generations active, measuring the memory high-water mark. Verify the worst-case bound before promising the hard limit.
